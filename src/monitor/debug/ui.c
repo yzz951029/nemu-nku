@@ -165,11 +165,12 @@ static struct {
 	{"info","Show information",cmd_info},
   /* TODO: Add more commands */
 	{ "si", "Step into implementation of N instructions after the suspension of execution.When N is notgiven,the default is 1.", cmd_si},
-	{ "b", "Breakpoint + *ADDR.", cmd_b},
 	{ "p", "Expression evaluation", cmd_p},
 	{ "x", "Calculate the value of the expression and regard the result as the starting memory address.", cmd_x},
 	{ "w", "Stop the execution of the program if the result of the expression has changed.", cmd_w},
 	{ "d", "Delete the Nth watchpoint", cmd_d},
+	
+	{ "b", "Breakpoint + *ADDR.", cmd_b},
 	{ "bt", "Print stack frame chain", cmd_bt},
 	{ "cache", "Print cache block infomation", cmd_cache}
 };
