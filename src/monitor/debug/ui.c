@@ -57,7 +57,7 @@ static int cmd_info(char *args);
 static int cmd_x(char *args)
 {
 	int n;
-	swaddr_t start_address;
+	uint32_t start_address;
 	int i;
 	bool suc;
 	char *cmd = strtok(args, " ");
@@ -66,7 +66,7 @@ static int cmd_x(char *args)
 	start_address = expr (args,&suc);
 	if (!suc)assert (1);
 	printf ("0x%08x: ",start_address);
-	current_sreg = R_DS;
+	//current_sreg = R_DS;
 	for (i=1; i<=n; i++) {
 		printf ("0x%08x ",vaddr_read (start_address,4));
 		start_address+=4;
