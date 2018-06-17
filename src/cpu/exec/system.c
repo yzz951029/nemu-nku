@@ -38,7 +38,7 @@ make_EHelper(int) {
 }
 
 make_EHelper(iret) {
-  rtl_pop(&t0);
+  /*rtl_pop(&t0);
   decoding.jmp_eip = t0;
   decoding.is_jmp = 1;
 
@@ -46,10 +46,11 @@ make_EHelper(iret) {
   cpu.cs = t0;
 
   rtl_pop(&t0);
-  cpu.eflags.val = t0;
+  cpu.eflags.val = t0*/
+  printf("Nothing here\n");
 
   print_asm("iret");
-}
+  }
 
 uint32_t pio_read(ioaddr_t, int);
 void pio_write(ioaddr_t, int, uint32_t);
