@@ -38,9 +38,10 @@ static int cmd_p(char *args)
 {
 	uint32_t num ;
 	bool suc;
+	//printf("Args:%s\n",args);
 	num = expr (args,&suc);
 	if (suc)
-		printf ("0x%x:\t%d\n",num,num);
+		printf ("Result:\t%d\n",num);
 	else assert (0);
 	return 0;
 }

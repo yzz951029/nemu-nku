@@ -29,7 +29,7 @@ static struct rule {
 	 */
 	{"\\b[0-9]+\\b",NUMBER,0},
 	{"\\b0[xX][0-9A-Fa-f]+\\b",HNUMBER,0},
-	{"\\b$[A-Za-z]+",REGISTER,0},
+	{"\\$[A-Za-z]+",REGISTER,0},
 	{"	+",TK_NOTYPE,0},	//tabs
 	{" +", TK_NOTYPE,0},    // spaces
 	{"\\+", '+',4},	// plus
@@ -39,8 +39,8 @@ static struct rule {
 	{"!=",NEQ,3},
 	{"!",'!',},
 	{"\\-",'-',4},
-	{"\\(",'(',10},
-	{"\\)",')',10},
+	{"\\(",'(',7},
+	{"\\)",')',7},
 	{"&&",AND,2},
 	{"\\|\\|",OR,1},
 	{"!",'!',6},
@@ -92,15 +92,15 @@ static bool make_token(char *e)
 				char *substr_start = e + position;
 				int substr_len = pmatch.rm_eo;
 
-				Log("match rules[%d] = \"%s\" at position %d with len %d: %.*s",
-				    i, rules[i].regex, position, substr_len, substr_len, substr_start);
+				//Log("match rules[%d] = \"%s\" at position %d with len %d: %.*s",
+				// i, rules[i].regex, position, substr_len, substr_len, substr_start);
 				position += substr_len;
 
 				/* TODO: Now a new token is recognized with rules[i]. Add codes
 				 * to record the token in the array `tokens'. For certain types
 				 * of tokens, some extra actions should be performed.
 				 */
-				switch(rule[i].token_type) {
+				switch(rules[i].token_type) {
 				case TK_NOTYPE:
 					break;
 				case REGISTER://处理掉寄存器的$
@@ -138,15 +138,13 @@ bool check_parentheses(int l,int r)
 		return false;
 	if(token[l].type!='('||token[r].type!=')')
 		return false;
-	else {
-		int lc = 0;
-		int rc = 0;
+	else{
+	  int cnt = 0;
 		for(int i=l+1; i<r; i++) {
-			if(token[i].type=='(')lc++;
-			if(token[i].type==')')rc++;
+			if(token[i].type=='(')cnt++;
+			if(token[i].type==')')cnt--;
+			if(cnt<0) return false;
 		}
-		if(lc!=rc)
-			return false;
 	}
 	return true;
 }
@@ -195,12 +193,14 @@ uint32_t eval(int l,int r)
 				int i;
 				for(i=R_EAX; i<=R_EDI; i++) {
 					if(strcmp(regsl[i],token[l].str)==0)
-						break;
-					if (strcmp (token[l].str,"eip") == 0)
-						num = cpu.eip;
-					else panic("no this register!\n");
-					else num = reg_l(i);
+					  break;
 				}
+				if(i>R_EDI)
+					  if (strcmp (token[l].str,"eip") == 0)
+						num = cpu.eip;
+					  else Assert(1,"no this register!\n");
+					else
+					  num = reg_l(i);
 
 			} else if ( strlen( token[l].str ) == 2 ) {//16位或者8位
 				if ( token[l].str[1] == 'x' || token[l].str[1] == 'p' || token[l].str[1] == 'i' ) {//16位
@@ -218,13 +218,15 @@ uint32_t eval(int l,int r)
 				} else assert( 0 );
 			}
 		}
+		return num;
 	} else if(check_parentheses(l,r)==true) {
 		return eval(l+1,r-1);
 	} else {
 		int op = dominant_operator(l,r);
 		if(op==l) {
 			uint32_t val = eval(l+1,r);
-			swtich(token[op].type) {
+			val = val;
+			switch(token[op].type) {
 			case MINUS:
 				return -val;
 			case POINTER:
@@ -232,34 +234,41 @@ uint32_t eval(int l,int r)
 			case '!':
 				return !val;
 			default:
-				assert(0);
+			  printf("l:%d,r:%d\n",l,r);
+			  printf("op:%d token_type:%d\n",op,token[op].type);
+			  assert(0);
 			}
 		} else {
-			uint32_t lval = eval(l,op-1);
-			uint32_t rval = eval(op+1,r);
-			switch(token[op].type) {
-			case '+'：
-					return lval+rval;
-			case '-':
-				return lval-rval;
-			case '*':
-				return lval*rval;
-			case '/':
-				return lval/rval;
-			case TK_EQ:
-				return lval==rval;
-			case NEQ:
-				return lval!=rval;
-			case AND:
-				return lval&&rval;
-			case OR:
-				return lval||rval;
-			default:
-				break;
+		  uint32_t lval = eval(l,op-1);
+		  //printf("lval: %d",lval);
+		  lval=lval;
+		  uint32_t rval = eval(op+1,r);
+		  //printf("rval: %d",rval);
+		  rval = rval;
+		  switch(token[op].type) {
+		  case '+':
+		    return lval+rval;
+		  case '-':
+		    return lval-rval;
+		  case '*':
+		    return lval*rval;
+		  case '/':
+		    return lval/rval;
+		  case TK_EQ:
+		    return lval==rval;
+		  case NEQ:
+		    return lval!=rval;
+		  case AND:
+		    return lval&&rval;
+		  case OR:
+		    return lval||rval;
+		  default:
+		    break;
 			}
 		}
 
 	}
+	return -123456;
 }
 
 uint32_t expr(char *e, bool *success)
@@ -271,7 +280,7 @@ uint32_t expr(char *e, bool *success)
 	int i;
 	for (i = 0; i < nr_token; i ++) {
 		if (token[i].type == '*' && (i == 0 || (token[i - 1].type != NUMBER && token[i - 1].type != HNUMBER && token[i - 1].type != REGISTER && token[i - 1].type !=')'))) {
-			token[i].type = POINTOR;
+			token[i].type = POINTER;
 			token[i].priority = 6;
 		}
 		if (token[i].type == '-' && (i == 0 || (token[i - 1].type != NUMBER && token[i - 1].type != HNUMBER && token[i - 1].type != REGISTER && token[i - 1].type !=')'))) {

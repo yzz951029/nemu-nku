@@ -1,6 +1,6 @@
 #include "monitor/watchpoint.h"
 #include "monitor/expr.h"
-
+#include "nemu.h"
 #define NR_WP 32
 
 static WP wp_pool[NR_WP];
@@ -82,19 +82,8 @@ void info_wp()
 void delete_wp(int num)
 {
 	WP *f;
-	f = &wp_list[num];
+	f = &wp_pool[num];
 	free_wp (f);
-}
-
-void info_wp()
-{
-	WP *f;
-	f=head;
-	while (f!=NULL)
-	{
-		printf ("Watchpoint %d: %s = %d\n",f->NO,f->expr,f->val);
-		f = f->next;
-	}
 }
 
 bool check_wp()
