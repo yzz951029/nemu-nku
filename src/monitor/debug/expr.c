@@ -39,8 +39,8 @@ static struct rule {
 	{"!=",NEQ,3},
 	{"!",'!',},
 	{"\\-",'-',4},
-	{"\\(",'(',10},
-	{"\\)",')',10},
+	{"\\(",'(',7},
+	{"\\)",')',7},
 	{"&&",AND,2},
 	{"\\|\\|",OR,1},
 	{"!",'!',6},
@@ -92,8 +92,8 @@ static bool make_token(char *e)
 				char *substr_start = e + position;
 				int substr_len = pmatch.rm_eo;
 
-				Log("match rules[%d] = \"%s\" at position %d with len %d: %.*s",
-				    i, rules[i].regex, position, substr_len, substr_len, substr_start);
+				//Log("match rules[%d] = \"%s\" at position %d with len %d: %.*s",
+				// i, rules[i].regex, position, substr_len, substr_len, substr_start);
 				position += substr_len;
 
 				/* TODO: Now a new token is recognized with rules[i]. Add codes
@@ -138,15 +138,13 @@ bool check_parentheses(int l,int r)
 		return false;
 	if(token[l].type!='('||token[r].type!=')')
 		return false;
-	else {
-		int lc = 0;
-		int rc = 0;
+	else{
+	  int cnt = 0;
 		for(int i=l+1; i<r; i++) {
-			if(token[i].type=='(')lc++;
-			if(token[i].type==')')rc++;
+			if(token[i].type=='(')cnt++;
+			if(token[i].type==')')cnt--;
+			if(cnt<0) return false;
 		}
-		if(lc!=rc)
-			return false;
 	}
 	return true;
 }
@@ -236,7 +234,9 @@ uint32_t eval(int l,int r)
 			case '!':
 				return !val;
 			default:
-				assert(0);
+			  printf("l:%d,r:%d\n",l,r);
+			  printf("op:%d token_type:%d\n",op,token[op].type);
+			  assert(0);
 			}
 		} else {
 		  uint32_t lval = eval(l,op-1);
