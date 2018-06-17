@@ -11,7 +11,7 @@ enum { OP_TYPE_REG, OP_TYPE_MEM, OP_TYPE_IMM };
 
 typedef struct {
   uint32_t type;
-  int width;
+  int len;
   union {
     uint32_t reg;
     rtlreg_t addr;
@@ -24,7 +24,7 @@ typedef struct {
 
 typedef struct {
   uint32_t opcode;
-  vaddr_t seq_eip;  // sequential eip
+  vaddr_t seq_eip;
   bool is_operand_size_16;
   uint8_t ext_opcode;
   bool is_jmp;
